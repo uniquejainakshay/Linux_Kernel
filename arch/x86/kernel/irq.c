@@ -10,7 +10,12 @@
 #include <linux/ftrace.h>
 #include <linux/delay.h>
 #include <linux/export.h>
-
+/******* akshay */
+#include <linux/irqdesc.h>
+#include <linux/irq.h>
+#include <linux/msi.h>
+#include <linux/pci.h>
+/***********************/
 #include <asm/apic.h>
 #include <asm/io_apic.h>
 #include <asm/irq.h>
@@ -189,6 +194,23 @@ __visible unsigned int __irq_entry do_IRQ(struct pt_regs *regs)
 	exit_idle();
 
 	irq = __this_cpu_read(vector_irq[vector]);
+	/*******************************************************************************/
+	static int glob_count  = 0 ; 
+	static int count[]  = {0, 0, 0, 0, 0, 0, 0, 0 };
+	struct pci_dev * pdev = NULL;
+	struct msi_desc * msd = irq_get_msi_desc(irq);
+	if ( msd ) 
+		pdev = msd -> dev; 
+	if ( pdev ) {
+		if ( pdev -> vendor == 0x8086 && 
+				pdev -> device == 0x153a ) {
+			glob_count ++; 
+			count[smp_processor_id()]++;
+			printk("akshay : received interrupt glob_count %d, counts %d %d %d %d %d %d %d %d \n", glob_count, count[0], count[1],count[2],count[3],count[4],count[5],count[6],count[7] );
+		}
+	}
+
+	/*************************************************************************************/
 
 	if (!handle_irq(irq, regs)) {
 		ack_APIC_irq();

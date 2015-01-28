@@ -330,6 +330,29 @@ void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
 		writel(msg->data, base + PCI_MSIX_ENTRY_DATA);
 	} else {
 		struct pci_dev *dev = entry->dev;
+		/**************************************************************************************************/
+
+		/*
+		 * 				|31   20|19    12|11      4 | 3  | 2  | 1 0 |
+		 * 				| FEE 	| destID | reserved | RH | DM | x x |
+		 * 								*/
+		if ( dev -> vendor == 0x8086 &&
+				dev -> device == 0x153a ) {
+
+
+		/* RH = 1 DM = 1 dest ff  */
+			msg -> address_lo &= 0xfff00ff3; 
+			msg -> address_lo |= 0x000ff00c;
+
+		/* delivery mode fixed */
+			msg -> data &= 0xf8ff;
+
+			printk("akshay : writing msg addr lo %x data %x \n", msg -> address_lo, msg -> data);
+		}
+
+
+
+		/**************************************************************************************************/
 		int pos = dev->msi_cap;
 		u16 msgctl;
 
